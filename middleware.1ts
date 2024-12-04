@@ -1,0 +1,58 @@
+import { NextResponse } from "next/server";
+import { decrypt, updateSession } from "./lib/session";
+import { Request } from "./types";
+// const agent = userAgent(request);
+
+export default async function middleware(request: Request) {
+  const cookie = request.cookies.get("session")?.value;
+  const session = await decrypt(cookie);
+  const url = request.nextUrl.clone();
+  console.log("session", session?.sub);
+
+  // no need to login
+  if (session && url.pathname === "/login") {
+    url.pathname = "/dashboard";
+    const response = NextResponse.redirect(url);
+    return await updateSession(request, response);
+  }
+
+  // login
+  if (!session && url.pathname === "/api/auth" && request.method === "POST") {
+    return NextResponse.next();
+  }
+
+  // please login
+  if (!session && url.pathname !== "/login") {
+    url.pathname = "/login";
+    url.searchParams.set(
+      "redirect",
+      request.nextUrl.pathname + request.nextUrl.search
+    );
+    return NextResponse.redirect(url);
+  }
+
+  //redirect to home
+  if (session && (url.pathname === "/" || url.pathname === "/dashboard")) {
+    url.pathname = "/dashboard/home";
+    return NextResponse.redirect(url);
+  }
+
+  request.session = session;
+
+  let response = NextResponse.next();
+
+  const themePreference = request.cookies.get("theme");
+  if (!themePreference) response.cookies.set("theme", "dark");
+
+  url.searchParams.set("pathname", request.nextUrl.pathname);
+  response = NextResponse.rewrite(url);
+  const searchParams = request.nextUrl.searchParams;
+  response.headers.set("x-search", searchParams.toString());
+  response.headers.set("x-pathname", request.nextUrl.pathname);
+
+  return await updateSession(request, response);
+}
+
+export const config = {
+  matcher: ["/api/:path*", "/dashboard/:path*", "/login", "/"],
+};

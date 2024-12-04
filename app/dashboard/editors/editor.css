@@ -1,0 +1,13 @@
+/* Custom styles for unordered lists */
+ul {
+  list-style-type: square; /* Change bullet style */
+  padding-left: 20px; /* Add padding */
+  color: #333; /* Change text color */
+}
+
+/* Custom styles for ordered lists */
+ol {
+  list-style-type: decimal; /* Change numbering style */
+  padding-left: 20px; /* Add padding */
+  color: #333; /* Change text color */
+}

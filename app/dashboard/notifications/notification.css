@@ -1,0 +1,8 @@
+.hover-content {
+  display: none;
+  z-index: 10;
+}
+
+.hover-container:hover .hover-content {
+  display: flex;
+}
